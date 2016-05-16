@@ -1,0 +1,129 @@
+<canvas id="canvas" width="500" height="250" style="border: 1px #000 solid;"></canvas>
+<script>
+  var ctx = canvas.getContext('2d');
+
+  var w = canvas.width;
+  var h = canvas.height;
+
+  var gravity = 0.05;
+
+  var hero = {
+    x: 10,
+    y: 120,
+    w: 30,
+    h: 30,
+    gravitySpeed: 0,
+    render: function() {
+      ctx.fillStyle = 'red';
+      ctx.fillRect(this.x, this.y, this.w, this.h);
+    },
+    move: function() {
+      this.gravitySpeed += gravity;
+      this.y += this.gravitySpeed;
+
+      var bottom = h - this.h;
+      if (this.y > bottom) {
+        this.gravitySpeed *= -0.5;
+        this.y = bottom;
+      }
+
+      var top = 0;
+      if (this.y < top) {
+        this.gravitySpeed = 0;
+        this.y = top;
+      }
+    },
+    isCrash: function(wall) {
+      var top = this.y;
+      var bottom = this.y + this.h;
+      var left = this.x;
+      var right = this.x + this.w;
+
+      var wTop = wall.y;
+      var wBottom = wall.y + wall.h;
+      var wLeft = wall.x;
+      var wRight = wall.x + wall.w;
+
+      if (bottom < wTop || top > wBottom || left > wRight || right < wLeft) {
+        return false;
+      }
+
+      return true;
+    }
+  }
+
+  var score = {
+    num: 0,
+    render: function() {
+      ctx.fillStyle = 'red';
+      ctx.fillText('Score: ' + this.num, w - 100, 20);
+    }
+  }
+
+  var getWall = function(y, h) {
+    return wall = {
+      x: w,
+      y: y,
+      w: 10,
+      h: h,
+      render: function() {
+        ctx.fillStyle = 'green';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+      },
+      move: function() {
+        this.x -= 1;
+      },
+    }
+  }
+
+  var walls = [];
+
+  var frameNum = 0;
+  var intervalId = setInterval(function() {
+    if (frameNum % 150 == 0) {
+      var min = 5;
+      var max = 200;
+      var height = Math.floor(Math.random() * (max - min + 1) + min);
+
+      var min = 70;
+      var max = 120;
+      var gap = Math.floor(Math.random() * (max - min + 1) + min);
+
+      walls.push(getWall(0, height));
+      walls.push(getWall(height + gap, h - height - gap));
+    }
+
+    walls.forEach(function(wall) {
+      if (hero.isCrash(wall)) {
+        clearInterval(intervalId);
+      }
+    });
+
+    ctx.clearRect(0, 0, w, h);
+
+    score.num = frameNum;
+    score.render();
+
+    walls.forEach(function(wall) {
+      wall.move();
+      wall.render();
+    });
+
+    hero.move();
+    hero.render();
+
+    frameNum += 1;
+  }, 20);
+
+  window.onkeydown = function(e) {
+    if (e.keyCode == 32) {
+      gravity = -0.2;
+    }
+  }
+
+  window.onkeyup = function(e) {
+    if (e.keyCode == 32) {
+      gravity = 0.05;
+    }
+  }
+</script>
